@@ -8,10 +8,10 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "dist:win": "electron-builder --win nsis portable",
-    "dist:linux": "electron-builder --linux AppImage deb"
+    "pack": "node scripts/run-builder.js --dir",
+    "dist": "node scripts/run-builder.js",
+    "dist:win": "node scripts/run-builder.js --win nsis portable",
+    "dist:linux": "node scripts/run-builder.js --linux AppImage deb pacman"
   },
   "dependencies": {
     "electron-store": "^10.1.0"
@@ -34,12 +34,12 @@
       "package-lock.json"
     ],
     "asar": true,
+    "npmRebuild": false,
     "win": {
       "target": [
         "nsis",
         "portable"
-      ],
-      "category": "Utility"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -48,7 +48,8 @@
     "linux": {
       "target": [
         "AppImage",
-        "deb"
+        "deb",
+        "pacman"
       ],
       "category": "Utility"
     }
