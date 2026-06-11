@@ -20,12 +20,18 @@ const settingsBackdrop = document.getElementById("settings-backdrop");
 const settingsClose = document.getElementById("settings-close");
 const dataPersistenceToggle = document.getElementById("data-persistence-toggle");
 const titlebarActions = document.querySelector(".titlebar__actions");
+const titlebarTabs = document.getElementById("titlebar-tabs");
 
 let umbrelWebview = null;
 let activeMode = "setup";
 let appSettings = {
   dataPersistence: true
 };
+let tabs = [];
+let activeTabId = null;
+let tabSequence = 0;
+let tabTransitionTimer = null;
+let tabsHideTimer = null;
 
 const backgroundImages = [
   "../../assets/backgrounds/1.jpg",
@@ -81,6 +87,15 @@ function scheduleWindowControlsReveal() {
   window.setTimeout(() => {
     titlebarActions.classList.add("titlebar__actions--visible");
   }, 2000);
+}
+
+function getTabTitle(url, fallback = "Umbrel") {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname || fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function validateConnection(ip, port) {
@@ -145,10 +160,283 @@ function getWebviewPartition() {
   return appSettings.dataPersistence ? "persist:umbrel" : "umbrel-temp";
 }
 
-function attachWebviewEvents(webview) {
+function updateTabsVisibility() {
+  if (tabsHideTimer) {
+    window.clearTimeout(tabsHideTimer);
+    tabsHideTimer = null;
+  }
+
+  if (activeMode !== "webview" || tabs.length === 0) {
+    titlebarTabs.classList.remove("titlebar__tabs--visible", "titlebar__tabs--single");
+    titlebarTabs.hidden = true;
+    return;
+  }
+
+  titlebarTabs.hidden = false;
+
+  if (tabs.length === 1) {
+    titlebarTabs.classList.add("titlebar__tabs--single", "titlebar__tabs--visible");
+    tabsHideTimer = window.setTimeout(() => {
+      if (tabs.length === 1 && activeMode === "webview") {
+        titlebarTabs.classList.remove("titlebar__tabs--visible");
+        window.setTimeout(() => {
+          if (tabs.length === 1 && activeMode === "webview") {
+            titlebarTabs.hidden = true;
+          }
+        }, 180);
+      }
+      tabsHideTimer = null;
+    }, 2000);
+    return;
+  }
+
+  titlebarTabs.classList.remove("titlebar__tabs--single");
+  titlebarTabs.classList.add("titlebar__tabs--visible");
+}
+
+function getActiveTab() {
+  return tabs.find((tab) => tab.id === activeTabId) ?? null;
+}
+
+function setActiveTab(tabId) {
+  const previousTab = getActiveTab();
+  const nextTab = tabs.find((tab) => tab.id === tabId) ?? null;
+
+  if (!nextTab) {
+    return;
+  }
+
+  if (previousTab?.id === nextTab.id) {
+    activeTabId = tabId;
+    nextTab.button.dataset.active = "true";
+    nextTab.webview.hidden = false;
+    nextTab.webview.classList.add("umbrel-webview--active");
+    updateTabsVisibility();
+    return;
+  }
+
+  if (tabTransitionTimer) {
+    window.clearTimeout(tabTransitionTimer);
+    tabTransitionTimer = null;
+  }
+
+  activeTabId = tabId;
+  const previousIndex = previousTab ? tabs.findIndex((tab) => tab.id === previousTab.id) : -1;
+  const nextIndex = tabs.findIndex((tab) => tab.id === nextTab.id);
+  const direction = previousIndex === -1 || nextIndex > previousIndex ? "forward" : "backward";
+
+  for (const tab of tabs) {
+    const isActive = tab.id === tabId;
+    tab.button.dataset.active = String(isActive);
+  }
+
+  nextTab.webview.hidden = false;
+  nextTab.webview.classList.remove(
+    "umbrel-webview--active",
+    "umbrel-webview--enter-from-right",
+    "umbrel-webview--enter-from-left",
+    "umbrel-webview--exit-to-left",
+    "umbrel-webview--exit-to-right"
+  );
+
+  if (!previousTab) {
+    nextTab.webview.classList.add("umbrel-webview--active");
+    updateTabsVisibility();
+    return;
+  }
+
+  previousTab.webview.hidden = false;
+  previousTab.webview.classList.remove(
+    "umbrel-webview--enter-from-right",
+    "umbrel-webview--enter-from-left",
+    "umbrel-webview--exit-to-left",
+    "umbrel-webview--exit-to-right"
+  );
+
+  if (direction === "forward") {
+    nextTab.webview.classList.remove("umbrel-webview--active");
+    nextTab.webview.classList.add("umbrel-webview--enter-from-right");
+    previousTab.webview.classList.add("umbrel-webview--exit-to-left");
+  } else {
+    nextTab.webview.classList.remove("umbrel-webview--active");
+    nextTab.webview.classList.add("umbrel-webview--enter-from-left");
+    previousTab.webview.classList.add("umbrel-webview--exit-to-right");
+  }
+
+  window.requestAnimationFrame(() => {
+    nextTab.webview.classList.add("umbrel-webview--active");
+  });
+
+  tabTransitionTimer = window.setTimeout(() => {
+    previousTab.webview.hidden = true;
+    previousTab.webview.classList.remove("umbrel-webview--exit-to-left", "umbrel-webview--exit-to-right");
+    nextTab.webview.classList.remove("umbrel-webview--enter-from-right", "umbrel-webview--enter-from-left");
+    tabTransitionTimer = null;
+  }, 320);
+
+  updateTabsVisibility();
+}
+
+function updateTabButton(tab) {
+  tab.button.innerHTML = "";
+
+  const label = document.createElement("span");
+  label.className = "titlebar__tab-label";
+  label.textContent = tab.title;
+  label.title = tab.url;
+  tab.button.append(label);
+
+  if (tab.closable) {
+    const close = document.createElement("button");
+    close.className = "titlebar__tab-close";
+    close.type = "button";
+    close.setAttribute("aria-label", `Close ${tab.title} tab`);
+    close.innerHTML = "<span></span>";
+    close.addEventListener("click", (event) => {
+      event.stopPropagation();
+      closeTab(tab.id);
+    });
+
+    tab.button.append(close);
+  }
+
+  tab.button.title = tab.url;
+}
+
+function closeTab(tabId) {
+  const index = tabs.findIndex((tab) => tab.id === tabId);
+  if (index === -1) {
+    return;
+  }
+
+  const [tab] = tabs.splice(index, 1);
+  const wasActive = activeTabId === tabId;
+
+  tab.button.classList.add("titlebar__tab--closing");
+  window.setTimeout(() => {
+    tab.button.remove();
+  }, 180);
+  tab.webview.remove();
+
+  if (tabs.length === 0) {
+    activeTabId = null;
+    umbrelWebview = null;
+    updateTabsVisibility();
+    return;
+  }
+
+  if (wasActive) {
+    const fallbackTab = tabs[Math.max(index - 1, 0)] ?? tabs[0];
+    setActiveTab(fallbackTab.id);
+    umbrelWebview = fallbackTab.webview;
+  } else {
+    updateTabsVisibility();
+  }
+}
+
+function createTab(url, { title, activateWhenReady = false } = {}) {
+  const id = `tab-${++tabSequence}`;
+  const button = document.createElement("button");
+  button.className = "titlebar__tab";
+  button.type = "button";
+
+  const webview = document.createElement("webview");
+  webview.id = `umbrel-webview-${id}`;
+  webview.className = "umbrel-webview";
+  webview.setAttribute("partition", getWebviewPartition());
+  webview.setAttribute("allowpopups", "true");
+
+  const tab = {
+    id,
+    url,
+    title: title || getTabTitle(url),
+    button,
+    webview,
+    closable: tabs.length > 0,
+    pendingActivation: activateWhenReady
+  };
+
+  button.addEventListener("click", () => {
+    setActiveTab(id);
+  });
+
+  updateTabButton(tab);
+  titlebarTabs.appendChild(button);
+  webviewShell.appendChild(webview);
+  attachWebviewEvents(webview, tab);
+  webview.setAttribute("src", url);
+  tabs.push(tab);
+  window.requestAnimationFrame(() => {
+    button.classList.add("titlebar__tab--visible");
+  });
+
+  if (!activateWhenReady) {
+    setActiveTab(id);
+  } else {
+    updateTabsVisibility();
+  }
+
+  return tab;
+}
+
+function resetTabs() {
+  for (const tab of tabs) {
+    tab.button.remove();
+    tab.webview.remove();
+  }
+
+  tabs = [];
+  activeTabId = null;
+  umbrelWebview = null;
+  titlebarTabs.replaceChildren();
+  updateTabsVisibility();
+}
+
+function ensureTabForUrl(url, options = {}) {
+  const existing = tabs.find((tab) => tab.url === url);
+  if (existing) {
+    setActiveTab(existing.id);
+    return existing;
+  }
+
+  return createTab(url, options);
+}
+
+function attachWebviewEvents(webview, tab) {
+  webview.addEventListener("new-window", (event) => {
+    if (!event.url) {
+      return;
+    }
+
+    showWebviewMode(event.url, { activateWhenReady: true });
+  });
+
+  webview.addEventListener("did-stop-loading", () => {
+    if (!tab.pendingActivation) {
+      return;
+    }
+
+    tab.pendingActivation = false;
+    setActiveTab(tab.id);
+  });
+
   webview.addEventListener("page-title-updated", (event) => {
     if (event.title) {
       document.title = event.title;
+      tab.title = event.title;
+      updateTabButton(tab);
+    }
+  });
+
+  webview.addEventListener("did-navigate", (event) => {
+    if (!event.isMainFrame) {
+      return;
+    }
+
+    tab.url = event.url;
+    if (!tab.title || tab.title === "Umbrel" || tab.title === getTabTitle(tab.url)) {
+      tab.title = getTabTitle(event.url);
+      updateTabButton(tab);
     }
   });
 
@@ -166,23 +454,8 @@ function attachWebviewEvents(webview) {
 }
 
 function ensureWebview() {
-  const expectedPartition = getWebviewPartition();
-
-  if (umbrelWebview && umbrelWebview.getAttribute("partition") === expectedPartition) {
-    return umbrelWebview;
-  }
-
-  if (umbrelWebview) {
-    umbrelWebview.remove();
-    umbrelWebview = null;
-  }
-
-  umbrelWebview = document.createElement("webview");
-  umbrelWebview.id = "umbrel-webview";
-  umbrelWebview.className = "umbrel-webview";
-  umbrelWebview.setAttribute("partition", expectedPartition);
-  webviewShell.replaceChildren(umbrelWebview);
-  attachWebviewEvents(umbrelWebview);
+  const activeTab = getActiveTab();
+  umbrelWebview = activeTab?.webview ?? null;
   return umbrelWebview;
 }
 
@@ -191,21 +464,21 @@ function showSetupMode(connection) {
   document.body.dataset.mode = "setup";
   webviewShell.hidden = true;
   content.hidden = false;
+  updateTabsVisibility();
   clearError();
   setLoadingState(false);
   ipInput.value = connection?.ip ?? "";
   portInput.value = connection?.port && Number(connection.port) !== 80 ? String(connection.port) : "";
 }
 
-function showWebviewMode(url) {
+function showWebviewMode(url, options = {}) {
   activeMode = "webview";
   document.body.dataset.mode = "webview";
   content.hidden = true;
   webviewShell.hidden = false;
-  const webview = ensureWebview();
-  if (webview.src !== url) {
-    webview.setAttribute("src", url);
-  }
+  const activeTab = ensureTabForUrl(url, options);
+  umbrelWebview = activeTab.webview;
+  updateTabsVisibility();
 }
 
 minimizeButton.addEventListener("click", () => {
@@ -260,6 +533,7 @@ dataPersistenceToggle.addEventListener("click", async () => {
   if (activeMode === "webview") {
     const url = await window.umbrelDesktop.getConnectionUrl();
     if (url) {
+      resetTabs();
       showWebviewMode(url);
     }
   }
@@ -314,6 +588,14 @@ window.umbrelDesktop.onSetupState(({ connection }) => {
   showSetupMode(connection);
 });
 
+window.umbrelDesktop.onWebviewNewTab(({ url }) => {
+  if (!url) {
+    return;
+  }
+
+  showWebviewMode(url, { activateWhenReady: true });
+});
+
 window.addEventListener("DOMContentLoaded", async () => {
   applyRandomBackground();
   scheduleWindowControlsReveal();
@@ -327,6 +609,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const url = await window.umbrelDesktop.getConnectionUrl();
 
   if (url) {
+    resetTabs();
     showWebviewMode(url);
     return;
   }

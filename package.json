@@ -10,7 +10,8 @@
     "dev": "electron .",
     "pack": "node scripts/run-builder.js --dir",
     "dist": "node scripts/run-builder.js",
-    "dist:win": "node scripts/run-builder.js --win nsis portable",
+    "dist:win": "node scripts/run-builder.js --win nsis",
+    "dist:win:portable": "node scripts/run-builder.js --win portable",
     "dist:linux": "node scripts/run-builder.js --linux AppImage deb pacman"
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "asar": true,
     "npmRebuild": false,
     "win": {
+      "icon": "assets/logo.ico",
       "target": [
         "nsis",
         "portable"
@@ -46,6 +48,7 @@
       "allowToChangeInstallationDirectory": true
     },
     "linux": {
+      "icon": "assets/logo.ico",
       "target": [
         "AppImage",
         "deb",

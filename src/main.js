@@ -172,6 +172,17 @@ function registerIpc() {
 app.whenReady().then(async () => {
   registerIpc();
   app.on("web-contents-created", (_, contents) => {
+    if (contents.getType() === "webview") {
+      contents.setWindowOpenHandler(({ url }) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send("webview:new-tab", { url });
+        }
+
+        return { action: "deny" };
+      });
+      return;
+    }
+
     contents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
       return { action: "deny" };

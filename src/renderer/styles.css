@@ -57,6 +57,29 @@ body {
   -webkit-app-region: drag;
 }
 
+.titlebar__tabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100vw - 340px);
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1), transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.titlebar__tabs--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.titlebar__tabs--single {
+  pointer-events: none;
+}
+
 .titlebar__actions {
   position: relative;
   z-index: 1;
@@ -84,6 +107,98 @@ body {
 
 .titlebar__menu {
   position: relative;
+}
+
+.titlebar__tab {
+  max-width: 200px;
+  height: 28px;
+  padding: 0 8px 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(10, 10, 12, 0.28);
+  color: rgba(255, 255, 255, 0.68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(22px) saturate(120%);
+  -webkit-backdrop-filter: blur(22px) saturate(120%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+  transition:
+    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+.titlebar__tab--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.titlebar__tab--closing {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+}
+
+.titlebar__tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.titlebar__tab[data-active="true"] {
+  color: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.titlebar__tab-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.titlebar__tab-close {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.52);
+  cursor: pointer;
+}
+
+.titlebar__tab-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.titlebar__tab-close span::before,
+.titlebar__tab-close span::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 3px;
+  width: 1.2px;
+  height: 10px;
+  background: currentColor;
+}
+
+.titlebar__tab-close span::before {
+  rotate: 45deg;
+}
+
+.titlebar__tab-close span::after {
+  rotate: -45deg;
 }
 
 .titlebar__server,
@@ -244,13 +359,44 @@ body[data-maximized="true"] .titlebar__icon--maximize::before {
   position: fixed;
   inset: 0;
   z-index: 1;
+  overflow: hidden;
 }
 
 .umbrel-webview {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   border: 0;
   background: #000;
+  opacity: 1;
+  transform: translateX(0);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.umbrel-webview--active {
+  transform: translateX(0);
+  z-index: 2;
+}
+
+.umbrel-webview--enter-from-right {
+  transform: translateX(100%);
+  z-index: 3;
+}
+
+.umbrel-webview--enter-from-left {
+  transform: translateX(-100%);
+  z-index: 3;
+}
+
+.umbrel-webview--exit-to-left {
+  transform: translateX(-100%);
+  z-index: 1;
+}
+
+.umbrel-webview--exit-to-right {
+  transform: translateX(100%);
+  z-index: 1;
 }
 
 .settings-modal {
