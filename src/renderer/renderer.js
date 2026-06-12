@@ -7,6 +7,7 @@ const wallpaper = document.getElementById("wallpaper");
 const serverButton = document.getElementById("server-btn");
 const serverMenu = document.getElementById("server-menu");
 const menuConnect = document.getElementById("menu-connect");
+const menuReset = document.getElementById("menu-reset");
 const menuSettings = document.getElementById("menu-settings");
 const menuFullscreen = document.getElementById("menu-fullscreen");
 const minimizeButton = document.getElementById("minimize-btn");
@@ -17,8 +18,8 @@ const webviewShell = document.getElementById("webview-shell");
 const settingsModal = document.getElementById("settings-modal");
 const settingsBackdrop = document.getElementById("settings-backdrop");
 const settingsClose = document.getElementById("settings-close");
-const settingsReset = document.getElementById("settings-reset");
 const dataPersistenceToggle = document.getElementById("data-persistence-toggle");
+const macosTitlebarToggle = document.getElementById("macos-titlebar-toggle");
 const titlebarActions = document.querySelector(".titlebar__actions");
 const titlebarTabs = document.getElementById("titlebar-tabs");
 const resetConfirmModal = document.getElementById("reset-confirm-modal");
@@ -36,7 +37,8 @@ const externalLinkUrl = document.getElementById("external-link-url");
 let umbrelWebview = null;
 let activeMode = "setup";
 let appSettings = {
-  dataPersistence: true
+  dataPersistence: true,
+  macosTitlebar: false
 };
 let tabs = [];
 let activeTabId = null;
@@ -211,7 +213,9 @@ function closeResetConfirmModal() {
 
 function syncSettingsUi() {
   dataPersistenceToggle.setAttribute("aria-pressed", String(appSettings.dataPersistence));
+  macosTitlebarToggle.setAttribute("aria-pressed", String(appSettings.macosTitlebar));
   document.body.dataset.dataPersistence = String(appSettings.dataPersistence);
+  document.body.dataset.macosTitlebar = String(appSettings.macosTitlebar);
 }
 
 function getWebviewPartition() {
@@ -568,6 +572,11 @@ menuConnect.addEventListener("click", async () => {
   await window.umbrelDesktop.openSettings();
 });
 
+menuReset.addEventListener("click", () => {
+  closeServerMenu();
+  openResetConfirmModal();
+});
+
 menuSettings.addEventListener("click", () => {
   openSettingsModal();
 });
@@ -580,15 +589,11 @@ menuFullscreen.addEventListener("click", async () => {
 
 settingsClose.addEventListener("click", closeSettingsModal);
 settingsBackdrop.addEventListener("click", closeSettingsModal);
-settingsReset.addEventListener("click", () => {
-  openResetConfirmModal();
-});
 resetConfirmClose.addEventListener("click", closeResetConfirmModal);
 resetConfirmBackdrop.addEventListener("click", closeResetConfirmModal);
 resetConfirmCancel.addEventListener("click", closeResetConfirmModal);
 resetConfirmOk.addEventListener("click", async () => {
   closeResetConfirmModal();
-  closeSettingsModal();
   await window.umbrelDesktop.resetConnection();
   showSetupMode(null);
 });
@@ -612,6 +617,13 @@ dataPersistenceToggle.addEventListener("click", async () => {
       showWebviewMode(url);
     }
   }
+});
+
+macosTitlebarToggle.addEventListener("click", async () => {
+  appSettings = await window.umbrelDesktop.updateSettings({
+    macosTitlebar: !appSettings.macosTitlebar
+  });
+  syncSettingsUi();
 });
 
 document.addEventListener("click", (event) => {

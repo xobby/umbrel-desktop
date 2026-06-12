@@ -7,7 +7,8 @@ const store = new Store({
   defaults: {
     connection: null,
     settings: {
-      dataPersistence: true
+      dataPersistence: true,
+      macosTitlebar: false
     }
   }
 });
@@ -44,7 +45,8 @@ function saveSettings(settings) {
   const next = {
     ...current,
     ...settings,
-    dataPersistence: settings.dataPersistence ?? current.dataPersistence
+    dataPersistence: settings.dataPersistence ?? current.dataPersistence,
+    macosTitlebar: settings.macosTitlebar ?? current.macosTitlebar
   };
 
   store.set("settings", next);

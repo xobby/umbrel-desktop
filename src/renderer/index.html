@@ -23,6 +23,7 @@
           </button>
           <div id="server-menu" class="titlebar__dropdown" hidden>
             <button id="menu-connect" class="titlebar__menu-item" type="button">Connect to new Umbrel</button>
+            <button id="menu-reset" class="titlebar__menu-item" type="button">Reset</button>
             <button id="menu-settings" class="titlebar__menu-item" type="button">Settings</button>
             <button id="menu-fullscreen" class="titlebar__menu-item" type="button">Fullscreen</button>
           </div>
@@ -81,20 +82,22 @@
               </div>
             </div>
 
-            <div class="settings-footer">
-              <span>Applies to this device only.</span>
-            </div>
-
-            <div class="settings-section settings-section--danger">
-              <div class="settings-row settings-row--danger">
+            <div class="settings-section">
+              <div class="settings-row settings-row--compact">
                 <div class="settings-copy">
                   <div class="settings-copy__topline">
-                    <strong>Danger Zone!!</strong>
+                    <strong>macOS Titlebar</strong>
                   </div>
-                  <p>Reset the saved Umbrel connection.</p>
+                  <p>Use macOS-style traffic lights and move the titlebar controls to the left side.</p>
                 </div>
-                <button id="settings-reset" class="settings-danger-button" type="button">Reset</button>
+                <button id="macos-titlebar-toggle" class="settings-toggle" type="button" aria-pressed="false">
+                  <span class="settings-toggle__thumb"></span>
+                </button>
               </div>
+            </div>
+
+            <div class="settings-footer">
+              <span>Applies to this device only.</span>
             </div>
           </div>
         </div>
@@ -104,13 +107,13 @@
       <div id="reset-confirm-backdrop" class="external-link-modal__backdrop"></div>
       <div class="external-link-modal__panel external-link-modal__panel--compact" role="dialog" aria-modal="true" aria-labelledby="reset-confirm-title">
         <div class="external-link-modal__header">
-          <h2 id="reset-confirm-title">Confirm reset</h2>
+          <h2 id="reset-confirm-title">Are you sure you want to reset your Umbrel Client?</h2>
           <button id="reset-confirm-close" class="external-link-modal__close" type="button" aria-label="Close reset confirmation">
             <span></span>
           </button>
         </div>
         <p class="external-link-modal__copy">
-          This will remove the saved Umbrel connection and bring you back to the connect screen.
+          This will not reset your Umbrel Server.
         </p>
         <div class="external-link-modal__actions">
           <button id="reset-confirm-cancel" class="external-link-modal__button external-link-modal__button--secondary" type="button">
