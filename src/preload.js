@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld("umbrelDesktop", {
   close: () => ipcRenderer.invoke("window:close"),
   toggleFullscreen: () => ipcRenderer.invoke("window:toggle-fullscreen"),
   getWindowState: () => ipcRenderer.invoke("window:get-state"),
+  openExternal: (url) => ipcRenderer.invoke("shell:open-external", url),
   saveConnection: (connection) => ipcRenderer.invoke("connection:save", connection),
   resetConnection: () => ipcRenderer.invoke("connection:reset"),
   openSettings: () => ipcRenderer.invoke("connection:open-settings"),

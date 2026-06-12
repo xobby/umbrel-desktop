@@ -135,6 +135,11 @@ function registerIpc() {
     return { isFullscreen: mainWindow.isFullScreen() };
   });
 
+  ipcMain.handle("shell:open-external", async (_, url) => {
+    await shell.openExternal(url);
+    return { ok: true };
+  });
+
   ipcMain.handle("connection:save", (_, connection) => {
     saveConnection(connection);
     return { ok: true };

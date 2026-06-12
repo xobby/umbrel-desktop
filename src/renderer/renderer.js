@@ -21,6 +21,12 @@ const settingsClose = document.getElementById("settings-close");
 const dataPersistenceToggle = document.getElementById("data-persistence-toggle");
 const titlebarActions = document.querySelector(".titlebar__actions");
 const titlebarTabs = document.getElementById("titlebar-tabs");
+const externalLinkModal = document.getElementById("external-link-modal");
+const externalLinkBackdrop = document.getElementById("external-link-backdrop");
+const externalLinkClose = document.getElementById("external-link-close");
+const externalLinkCancel = document.getElementById("external-link-cancel");
+const externalLinkConfirm = document.getElementById("external-link-confirm");
+const externalLinkUrl = document.getElementById("external-link-url");
 
 let umbrelWebview = null;
 let activeMode = "setup";
@@ -32,6 +38,7 @@ let activeTabId = null;
 let tabSequence = 0;
 let tabTransitionTimer = null;
 let tabsHideTimer = null;
+let pendingExternalUrl = null;
 
 const backgroundImages = [
   "../../assets/backgrounds/1.jpg",
@@ -96,6 +103,44 @@ function getTabTitle(url, fallback = "Umbrel") {
   } catch {
     return fallback;
   }
+}
+
+function isIpv4Host(hostname) {
+  return ipv4Pattern.test(hostname);
+}
+
+function shouldOpenExternally(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return true;
+    }
+
+    return !isIpv4Host(parsed.hostname);
+  } catch {
+    return true;
+  }
+}
+
+function openExternalLinkModal(url) {
+  pendingExternalUrl = url;
+  externalLinkUrl.textContent = url;
+  externalLinkModal.hidden = false;
+}
+
+function closeExternalLinkModal() {
+  pendingExternalUrl = null;
+  externalLinkModal.hidden = true;
+}
+
+async function confirmExternalLink() {
+  if (!pendingExternalUrl) {
+    return;
+  }
+
+  const url = pendingExternalUrl;
+  closeExternalLinkModal();
+  await window.umbrelDesktop.openExternal(url);
 }
 
 function validateConnection(ip, port) {
@@ -408,6 +453,11 @@ function attachWebviewEvents(webview, tab) {
       return;
     }
 
+    if (shouldOpenExternally(event.url)) {
+      openExternalLinkModal(event.url);
+      return;
+    }
+
     showWebviewMode(event.url, { activateWhenReady: true });
   });
 
@@ -523,6 +573,12 @@ menuFullscreen.addEventListener("click", async () => {
 
 settingsClose.addEventListener("click", closeSettingsModal);
 settingsBackdrop.addEventListener("click", closeSettingsModal);
+externalLinkClose.addEventListener("click", closeExternalLinkModal);
+externalLinkBackdrop.addEventListener("click", closeExternalLinkModal);
+externalLinkCancel.addEventListener("click", closeExternalLinkModal);
+externalLinkConfirm.addEventListener("click", () => {
+  confirmExternalLink();
+});
 
 dataPersistenceToggle.addEventListener("click", async () => {
   appSettings = await window.umbrelDesktop.updateSettings({
@@ -549,6 +605,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeServerMenu();
     closeSettingsModal();
+    closeExternalLinkModal();
   }
 });
 
@@ -590,6 +647,11 @@ window.umbrelDesktop.onSetupState(({ connection }) => {
 
 window.umbrelDesktop.onWebviewNewTab(({ url }) => {
   if (!url) {
+    return;
+  }
+
+  if (shouldOpenExternally(url)) {
+    openExternalLinkModal(url);
     return;
   }
 

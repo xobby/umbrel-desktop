@@ -89,6 +89,29 @@
         </div>
       </div>
     </section>
+    <section id="external-link-modal" class="external-link-modal" hidden>
+      <div id="external-link-backdrop" class="external-link-modal__backdrop"></div>
+      <div class="external-link-modal__panel" role="dialog" aria-modal="true" aria-labelledby="external-link-title">
+        <div class="external-link-modal__header">
+          <h2 id="external-link-title">Leaving Umbrel Desktop</h2>
+          <button id="external-link-close" class="external-link-modal__close" type="button" aria-label="Close warning">
+            <span></span>
+          </button>
+        </div>
+        <p class="external-link-modal__copy">
+          You are about to open an external website in your default browser.
+        </p>
+        <p id="external-link-url" class="external-link-modal__url"></p>
+        <div class="external-link-modal__actions">
+          <button id="external-link-cancel" class="external-link-modal__button external-link-modal__button--secondary" type="button">
+            Cancel
+          </button>
+          <button id="external-link-confirm" class="external-link-modal__button external-link-modal__button--primary" type="button">
+            OK
+          </button>
+        </div>
+      </div>
+    </section>
     <main class="content">
       <section id="setup-panel" class="setup-card">
         <div class="logo-wrap" aria-hidden="true">
