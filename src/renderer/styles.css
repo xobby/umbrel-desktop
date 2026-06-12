@@ -441,6 +441,24 @@ body[data-macos-titlebar="true"] .titlebar__icon {
   display: none;
 }
 
+body[data-macos-titlebar="true"][data-window-focused="false"] #close-btn,
+body[data-macos-titlebar="true"][data-window-focused="false"] #minimize-btn,
+body[data-macos-titlebar="true"][data-window-focused="false"] #maximize-btn {
+  background: #d4d4d4;
+  filter: none;
+}
+
+body[data-macos-titlebar="true"][data-window-focused="false"] #close-btn:hover,
+body[data-macos-titlebar="true"][data-window-focused="false"] #minimize-btn:hover,
+body[data-macos-titlebar="true"][data-window-focused="false"] #maximize-btn:hover {
+  background: #d4d4d4;
+}
+
+body[data-macos-titlebar="true"][data-window-focused="false"] .titlebar__button::before,
+body[data-macos-titlebar="true"][data-window-focused="false"] .titlebar__button::after {
+  opacity: 0;
+}
+
 .titlebar__icon {
   position: relative;
   display: block;

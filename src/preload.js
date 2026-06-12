@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld("umbrelDesktop", {
   getSettings: () => ipcRenderer.invoke("settings:get"),
   updateSettings: (settings) => ipcRenderer.invoke("settings:update", settings),
   onSetupState: (callback) => ipcRenderer.on("setup-state", (_, payload) => callback(payload)),
+  onWindowFocusChange: (callback) => ipcRenderer.on("window:focus-changed", (_, payload) => callback(payload)),
   onWebviewError: (callback) => ipcRenderer.on("webview-error", (_, payload) => callback(payload)),
   onWebviewNewTab: (callback) => ipcRenderer.on("webview:new-tab", (_, payload) => callback(payload))
 });

@@ -98,6 +98,18 @@ function createMainWindow() {
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
+
+  mainWindow.on("focus", () => {
+    mainWindow?.webContents.send("window:focus-changed", {
+      isFocused: true
+    });
+  });
+
+  mainWindow.on("blur", () => {
+    mainWindow?.webContents.send("window:focus-changed", {
+      isFocused: false
+    });
+  });
 }
 
 function registerIpc() {
@@ -125,7 +137,8 @@ function registerIpc() {
 
   ipcMain.handle("window:get-state", () => ({
     isMaximized: mainWindow?.isMaximized() ?? false,
-    isFullscreen: mainWindow?.isFullScreen() ?? false
+    isFullscreen: mainWindow?.isFullScreen() ?? false,
+    isFocused: mainWindow?.isFocused() ?? false
   }));
 
   ipcMain.handle("window:toggle-fullscreen", () => {

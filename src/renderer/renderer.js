@@ -46,6 +46,7 @@ let tabSequence = 0;
 let tabTransitionTimer = null;
 let tabsHideTimer = null;
 let pendingExternalUrl = null;
+let isWindowFocused = true;
 
 const backgroundImages = [
   "../../assets/backgrounds/1.jpg",
@@ -216,6 +217,7 @@ function syncSettingsUi() {
   macosTitlebarToggle.setAttribute("aria-pressed", String(appSettings.macosTitlebar));
   document.body.dataset.dataPersistence = String(appSettings.dataPersistence);
   document.body.dataset.macosTitlebar = String(appSettings.macosTitlebar);
+  document.body.dataset.windowFocused = String(isWindowFocused);
 }
 
 function getWebviewPartition() {
@@ -690,12 +692,19 @@ window.umbrelDesktop.onWebviewNewTab(({ url }) => {
   showWebviewMode(url, { activateWhenReady: true });
 });
 
+window.umbrelDesktop.onWindowFocusChange(({ isFocused }) => {
+  isWindowFocused = Boolean(isFocused);
+  document.body.dataset.windowFocused = String(isWindowFocused);
+});
+
 window.addEventListener("DOMContentLoaded", async () => {
   applyRandomBackground();
   scheduleWindowControlsReveal();
   const windowState = await window.umbrelDesktop.getWindowState();
   document.body.dataset.maximized = String(windowState.isMaximized);
   document.body.dataset.fullscreen = String(windowState.isFullscreen);
+  isWindowFocused = Boolean(windowState.isFocused);
+  document.body.dataset.windowFocused = String(isWindowFocused);
   appSettings = await window.umbrelDesktop.getSettings();
   syncSettingsUi();
 
