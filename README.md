@@ -123,3 +123,9 @@ For installing the actual server OS, visit:
 
 - [umbrel.com](https://umbrel.com)
 - [umbrelOS](https://umbrel.com/umbrelos)
+
+## Future updates
+
+I'm gonna rework the app and move to Tauri V2 Due to Electron being too resource expensive
+If you have the same problem, shut up.
+I know your PC can handle Electron. Mine can't. So, we are switching to Tauri.
