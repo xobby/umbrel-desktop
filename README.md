@@ -127,5 +127,7 @@ For installing the actual server OS, visit:
 ## Future updates
 
 I'm gonna rework the app and move to Tauri V2 Due to Electron being too resource expensive
+<br>
 If you have the same problem, shut up.
+<br>
 I know your PC can handle Electron. Mine can't. So, we are switching to Tauri.
