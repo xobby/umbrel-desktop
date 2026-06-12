@@ -7,7 +7,6 @@ const wallpaper = document.getElementById("wallpaper");
 const serverButton = document.getElementById("server-btn");
 const serverMenu = document.getElementById("server-menu");
 const menuConnect = document.getElementById("menu-connect");
-const menuReset = document.getElementById("menu-reset");
 const menuSettings = document.getElementById("menu-settings");
 const menuFullscreen = document.getElementById("menu-fullscreen");
 const minimizeButton = document.getElementById("minimize-btn");
@@ -18,9 +17,15 @@ const webviewShell = document.getElementById("webview-shell");
 const settingsModal = document.getElementById("settings-modal");
 const settingsBackdrop = document.getElementById("settings-backdrop");
 const settingsClose = document.getElementById("settings-close");
+const settingsReset = document.getElementById("settings-reset");
 const dataPersistenceToggle = document.getElementById("data-persistence-toggle");
 const titlebarActions = document.querySelector(".titlebar__actions");
 const titlebarTabs = document.getElementById("titlebar-tabs");
+const resetConfirmModal = document.getElementById("reset-confirm-modal");
+const resetConfirmBackdrop = document.getElementById("reset-confirm-backdrop");
+const resetConfirmClose = document.getElementById("reset-confirm-close");
+const resetConfirmCancel = document.getElementById("reset-confirm-cancel");
+const resetConfirmOk = document.getElementById("reset-confirm-ok");
 const externalLinkModal = document.getElementById("external-link-modal");
 const externalLinkBackdrop = document.getElementById("external-link-backdrop");
 const externalLinkClose = document.getElementById("external-link-close");
@@ -194,6 +199,14 @@ function openSettingsModal() {
 
 function closeSettingsModal() {
   settingsModal.hidden = true;
+}
+
+function openResetConfirmModal() {
+  resetConfirmModal.hidden = false;
+}
+
+function closeResetConfirmModal() {
+  resetConfirmModal.hidden = true;
 }
 
 function syncSettingsUi() {
@@ -555,12 +568,6 @@ menuConnect.addEventListener("click", async () => {
   await window.umbrelDesktop.openSettings();
 });
 
-menuReset.addEventListener("click", async () => {
-  closeServerMenu();
-  await window.umbrelDesktop.resetConnection();
-  showSetupMode(null);
-});
-
 menuSettings.addEventListener("click", () => {
   openSettingsModal();
 });
@@ -573,6 +580,18 @@ menuFullscreen.addEventListener("click", async () => {
 
 settingsClose.addEventListener("click", closeSettingsModal);
 settingsBackdrop.addEventListener("click", closeSettingsModal);
+settingsReset.addEventListener("click", () => {
+  openResetConfirmModal();
+});
+resetConfirmClose.addEventListener("click", closeResetConfirmModal);
+resetConfirmBackdrop.addEventListener("click", closeResetConfirmModal);
+resetConfirmCancel.addEventListener("click", closeResetConfirmModal);
+resetConfirmOk.addEventListener("click", async () => {
+  closeResetConfirmModal();
+  closeSettingsModal();
+  await window.umbrelDesktop.resetConnection();
+  showSetupMode(null);
+});
 externalLinkClose.addEventListener("click", closeExternalLinkModal);
 externalLinkBackdrop.addEventListener("click", closeExternalLinkModal);
 externalLinkCancel.addEventListener("click", closeExternalLinkModal);
@@ -605,6 +624,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeServerMenu();
     closeSettingsModal();
+    closeResetConfirmModal();
     closeExternalLinkModal();
   }
 });
