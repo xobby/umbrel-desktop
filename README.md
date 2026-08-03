@@ -47,7 +47,6 @@ Think of it as a lightweight UmbrelOS companion app, not the server itself.
 - Custom desktop shell built with Electron
 - Session persistence for UmbrelOS login cookies
 - Dropdown controls for switching server, reset, settings, and fullscreen
-- Randomized Umbrel-style wallpaper background on startup
 - Exportable builds for Windows and Linux
 
 ## Getting started
